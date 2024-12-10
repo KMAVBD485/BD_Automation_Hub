@@ -187,9 +187,10 @@ with st.expander("**Expand to see how to use the tool**", expanded=False):
 
 st.write("")
 st.write("")
+
 uploaded_file = st.file_uploader("Upload Extracted File from Google Calendar", type=["ics"])
 
-# Helper Functions
+# Helper Functions (previously defined functions remain the same)
 def clean_ics_description(description):
     """Clean and format event descriptions from ICS file."""
     description = str(description)
@@ -259,76 +260,140 @@ def clean_attendees_list_with_status(attendees):
         return ', '.join(cleaned_entries)
     return str(attendees)
 
+def process_large_ics_file(file_path, chunk_size=1000):
+    """
+    Process large ICS files in chunks to manage memory usage.
+    
+    :param file_path: Path to the ICS file
+    :param chunk_size: Number of events to process in each chunk
+    :return: List of dictionaries containing event data
+    """
+    data = []
+    
+    # Use progress bar for user feedback
+    progress_bar = st.progress(0)
+    status_text = st.empty()
+    
+    try:
+        # Read the file content
+        with open(file_path, 'r', encoding='utf-8') as f:
+            calendar_data = f.read()
+        
+        # Parse the entire calendar to get total events
+        total_calendar = Calendar(calendar_data)
+        total_events = len(list(total_calendar.events))
+        status_text.text(f"Total events found: {total_events}")
+        
+        # Create a new calendar parser for chunked processing
+        calendar = Calendar(calendar_data)
+        events_iterator = iter(calendar.events)
+        
+        processed_events = 0
+        while True:
+            # Collect a chunk of events
+            chunk_events = []
+            for _ in range(chunk_size):
+                try:
+                    event = next(events_iterator)
+                    chunk_events.append(event)
+                except StopIteration:
+                    break
+            
+            # If no more events, break the loop
+            if not chunk_events:
+                break
+            
+            # Process this chunk of events
+            for event in chunk_events:
+                attendees = [str(attendee) for attendee in event.attendees] if event.attendees else []
+                data.append({
+                    "Event Name": event.name,
+                    "Start": event.begin,
+                    "End": event.end,
+                    "Description": event.description,
+                    "Location": event.location,
+                    "Organizer": str(event.organizer) if event.organizer else None,
+                    "Attendees": attendees,
+                })
+            
+            # Update progress
+            processed_events += len(chunk_events)
+            progress = min(processed_events / total_events, 1.0)
+            progress_bar.progress(progress)
+            status_text.text(f"Processed {processed_events}/{total_events} events")
+        
+        # Clear progress indicators
+        progress_bar.empty()
+        status_text.empty()
+        
+        return data
+    
+    except Exception as e:
+        st.error(f"Error processing file: {str(e)}")
+        return []
+
 # Main Logic
 if uploaded_file is not None:
-    # Read and parse the uploaded file
-    calendar_data = uploaded_file.read().decode("utf-8")
-    calendar = Calendar(calendar_data)
+    # Save uploaded file temporarily
+    with open("temp_calendar.ics", "wb") as f:
+        f.write(uploaded_file.getvalue())
+    
+    # Process file in chunks
+    data = process_large_ics_file("temp_calendar.ics")
+    
+    if data:
+        df = pd.DataFrame(data)
+        pd.set_option('display.max_colwidth', None)
 
-    # Extract events into a DataFrame
-    data = []
-    for event in calendar.events:
-        attendees = [str(attendee) for attendee in event.attendees] if event.attendees else []
-        data.append({
-            "Event Name": event.name,
-            "Start": event.begin,
-            "End": event.end,
-            "Description": event.description,
-            "Location": event.location,
-            "Organizer": str(event.organizer) if event.organizer else None,
-            "Attendees": attendees,
-        })
+        # Convert datetime objects
+        df['Start'] = df['Start'].apply(lambda x: x.datetime if isinstance(x, arrow.Arrow) else x)
+        df['End'] = df['End'].apply(lambda x: x.datetime if isinstance(x, arrow.Arrow) else x)
 
-    df = pd.DataFrame(data)
-    pd.set_option('display.max_colwidth', None)
+        # Display extracted data
+        st.write("Extracted Google Calendar Data")
+        st.dataframe(data=df, use_container_width=True, hide_index=True)
 
-    # Convert datetime objects
-    df['Start'] = df['Start'].apply(lambda x: x.datetime if isinstance(x, arrow.Arrow) else x)
-    df['End'] = df['End'].apply(lambda x: x.datetime if isinstance(x, arrow.Arrow) else x)
+        # Clean data
+        df['Description'] = df['Description'].apply(clean_ics_description)
+        df['Organizer'] = df['Organizer'].apply(clean_organizer_name)
+        df['Attendees'] = df['Attendees'].apply(clean_attendees_list_with_status)
 
-    # Display extracted data
-    st.write("Extracted Google Calendar Data")
-    st.dataframe(data=df, use_container_width=True, hide_index=True)
+        # Display cleaned data
+        st.write("Cleaned Google Calendar Data")
+        st.dataframe(data=df, use_container_width=True, hide_index=True)
 
-    # Clean data
-    df['Description'] = df['Description'].apply(clean_ics_description)
-    df['Organizer'] = df['Organizer'].apply(clean_organizer_name)
-    df['Attendees'] = df['Attendees'].apply(clean_attendees_list_with_status)
+        # Filter Events Interactive Section (same as before)
+        def filter_events_interactive(df):
+            st.subheader("Filter Events")
+            start_date = st.text_input("Start date (YYYY-MM-DD):", "")
+            end_date = st.text_input("End date (YYYY-MM-DD):", "")
+            attendee_name = st.text_input("Enter attendee name (or leave blank to skip):", "").strip()
+            status = st.text_input("Enter status (e.g., ACCEPTED, DECLINED, NEEDS-ACTION, or leave blank to include all):", "").strip().upper()
 
-    # Display cleaned data
-    st.write("Cleaned Google Calendar Data")
-    st.dataframe(data=df, use_container_width=True, hide_index=True)
+            if start_date and end_date:
+                try:
+                    start_date = pd.to_datetime(start_date).tz_localize('UTC')
+                    end_date = pd.to_datetime(end_date).tz_localize('UTC')
+                    filtered_df = df[(df['Start'] >= start_date) & (df['End'] <= end_date)]
 
-    # Filter Events Interactive Section
-    def filter_events_interactive(df):
-        st.subheader("Filter Events")
-        start_date = st.text_input("Start date (YYYY-MM-DD):", "")
-        end_date = st.text_input("End date (YYYY-MM-DD):", "")
-        attendee_name = st.text_input("Enter attendee name (or leave blank to skip):", "").strip()
-        status = st.text_input("Enter status (e.g., ACCEPTED, DECLINED, NEEDS-ACTION, or leave blank to include all):", "").strip().upper()
+                    if attendee_name:
+                        attendee_name = attendee_name.title()
+                        if status:
+                            filtered_df = filtered_df[filtered_df['Attendees'].str.contains(
+                                f"{attendee_name}: {status}", case=False, na=False)]
+                        else:
+                            filtered_df = filtered_df[filtered_df['Attendees'].str.contains(
+                                attendee_name, case=False, na=False)]
 
-        if start_date and end_date:
-            try:
-                start_date = pd.to_datetime(start_date).tz_localize('UTC')
-                end_date = pd.to_datetime(end_date).tz_localize('UTC')
-                filtered_df = df[(df['Start'] >= start_date) & (df['End'] <= end_date)]
+                    st.write("Filtered Events")
+                    st.dataframe(filtered_df.sort_values(by=['Start', 'End'], ascending=[True, True]))
+                except ValueError:
+                    st.error("Invalid date format! Please use YYYY-MM-DD.")
+            else:
+                st.warning("Please enter both start and end dates.")
 
-                if attendee_name:
-                    attendee_name = attendee_name.title()
-                    if status:
-                        filtered_df = filtered_df[filtered_df['Attendees'].str.contains(
-                            f"{attendee_name}: {status}", case=False, na=False)]
-                    else:
-                        filtered_df = filtered_df[filtered_df['Attendees'].str.contains(
-                            attendee_name, case=False, na=False)]
-
-                st.write("Filtered Events")
-                st.dataframe(filtered_df.sort_values(by=['Start', 'End'], ascending=[True, True]))
-            except ValueError:
-                st.error("Invalid date format! Please use YYYY-MM-DD.")
-        else:
-            st.warning("Please enter both start and end dates.")
-
-    filter_events_interactive(df)
+        filter_events_interactive(df)
+    else:
+        st.error("Failed to process the file. Please check the file format and try again.")
 else:
     st.warning("Please upload a file to proceed.")
