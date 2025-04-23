@@ -15,6 +15,7 @@ URL = st.text_input("Enter Glassdoor Review URL",
 def scrape_data(url):
     try:
         options = uc.ChromeOptions()
+        options.binary_location = "/usr/bin/google-chrome"
         options.add_argument("user-agent=Mozilla/5.0")
 
         driver = uc.Chrome(options=options)
