@@ -25,7 +25,7 @@ def scrape_data(url):
         options.add_argument("--headless")  # Run in headless mode for cloud deployment
         
         # Use explicit version to avoid browser detection issues
-        service = Service(ChromeDriverManager(version="114.0.5735.90").install())
+        service = Service(ChromeDriverManager(driver_version="114.0.5735.90").install())
         driver = webdriver.Chrome(service=service, options=options)
         
         driver.get(url)
