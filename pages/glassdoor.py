@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 import time
 import re
-import undetected_chromedriver as uc
 from selenium import webdriver
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.chrome.service import Service
@@ -17,9 +16,16 @@ URL = st.text_input("Enter Glassdoor Review URL",
 
 def scrape_data(url):
     try:
+        # Standard Selenium approach
         options = webdriver.ChromeOptions()
-        options.add_argument("user-agent=Mozilla/5.0")
-        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
+        options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36")
+        options.add_argument("--disable-blink-features=AutomationControlled")
+        options.add_argument("--no-sandbox")
+        options.add_argument("--disable-dev-shm-usage")
+        
+        service = Service(ChromeDriverManager().install())
+        driver = webdriver.Chrome(service=service, options=options)
+        
         driver.get(url)
         time.sleep(30)
 
@@ -98,7 +104,8 @@ def scrape_data(url):
                         "CEO Approval": ceo_approval,
                         "Business Outlook": business_outlook
                     })
-                except:
+                except Exception as e:
+                    st.warning(f"Error extracting a review: {e}")
                     continue
             return reviews
 
@@ -107,7 +114,9 @@ def scrape_data(url):
         return reviews_data
 
     except Exception as e:
+        import traceback
         st.error(f"Error initializing browser: {e}")
+        st.error(f"Traceback: {traceback.format_exc()}")
         return []
 
 if st.button("Scrape Glassdoor Reviews"):
@@ -117,5 +126,14 @@ if st.button("Scrape Glassdoor Reviews"):
             df = pd.DataFrame(data)
             st.success(f"Scraped {len(df)} reviews!")
             st.dataframe(df)
+            
+            # Add download option
+            csv = df.to_csv(index=False)
+            st.download_button(
+                label="Download data as CSV",
+                data=csv,
+                file_name="glassdoor_reviews.csv",
+                mime="text/csv",
+            )
         else:
             st.error("No data scraped. Please check the URL or try again later.")
