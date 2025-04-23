@@ -16,14 +16,16 @@ URL = st.text_input("Enter Glassdoor Review URL",
 
 def scrape_data(url):
     try:
-        # Standard Selenium approach
+        # Standard Selenium approach with explicit ChromeDriver version
         options = webdriver.ChromeOptions()
         options.add_argument("user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.212 Safari/537.36")
         options.add_argument("--disable-blink-features=AutomationControlled")
         options.add_argument("--no-sandbox")
         options.add_argument("--disable-dev-shm-usage")
+        options.add_argument("--headless")  # Run in headless mode for cloud deployment
         
-        service = Service(ChromeDriverManager().install())
+        # Use explicit version to avoid browser detection issues
+        service = Service(ChromeDriverManager(version="114.0.5735.90").install())
         driver = webdriver.Chrome(service=service, options=options)
         
         driver.get(url)
@@ -34,7 +36,8 @@ def scrape_data(url):
                 for _ in range(10):
                     driver.execute_script("window.scrollBy(0, document.body.scrollHeight)")
                     time.sleep(2)
-            except:
+            except Exception as e:
+                st.warning(f"Scroll error: {e}")
                 pass
 
         scroll_reviews()
@@ -42,6 +45,8 @@ def scrape_data(url):
         def extract_reviews():
             reviews = []
             review_elements = driver.find_elements(By.CSS_SELECTOR, "div[data-test='review-details-container']")
+            st.info(f"Found {len(review_elements)} review elements")
+            
             for review in review_elements:
                 try:
                     rating = review.find_element(By.CSS_SELECTOR, "span[data-test='review-rating-label']").text
