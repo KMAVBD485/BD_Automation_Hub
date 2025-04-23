@@ -3,6 +3,8 @@ import pandas as pd
 import time
 import re
 import undetected_chromedriver as uc
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.common.by import By
 
 st.set_page_config(page_title="Payreto Glassdoor Review Scraper", layout="centered")
@@ -15,10 +17,8 @@ URL = st.text_input("Enter Glassdoor Review URL",
 def scrape_data(url):
     try:
         options = uc.ChromeOptions()
-        options.binary_location = "/usr/bin/google-chrome"
         options.add_argument("user-agent=Mozilla/5.0")
-
-        driver = uc.Chrome(service=Service(ChromeDriverManager().install()),options=options)
+        driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()),options=options)
         driver.get(url)
         time.sleep(30)
 
