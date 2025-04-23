@@ -18,7 +18,7 @@ def scrape_data(url):
         options.binary_location = "/usr/bin/google-chrome"
         options.add_argument("user-agent=Mozilla/5.0")
 
-        driver = uc.Chrome(options=options, browser_executable_path="/usr/bin/google-chrome")
+        driver = uc.Chrome(service=Service(ChromeDriverManager().install()),options=options)
         driver.get(url)
         time.sleep(30)
 
