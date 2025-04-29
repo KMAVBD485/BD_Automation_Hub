@@ -2,7 +2,6 @@ import streamlit as st
 import pandas as pd
 from jobspy import scrape_jobs
 
-
 st.set_page_config(page_title="Job Listing Scraper", page_icon="💼", layout="wide")
 
 st.title("Job Listing Scraper")
@@ -19,7 +18,6 @@ selected_sites = st.sidebar.multiselect(
 
 search_term = st.sidebar.text_input("Job Title or Keywords", "KYC Analyst")
 location = st.sidebar.text_input("Target Location", "United States")
-st.markdown("Note: Search Order for OaaS listings = ")
 
 st.sidebar.markdown("---")
 st.sidebar.subheader("Advanced Filters")
@@ -75,6 +73,7 @@ def search_jobs():
                 job_type=job_type_param,
                 experience_level=experience_level_param,
                 country_indeed=location,
+                linkedin_fetch_description=True,
                 remote_only=(remote_param == "REMOTE")
             )
             
