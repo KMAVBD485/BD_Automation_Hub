@@ -11,7 +11,7 @@ st.title(':blue[PRT Birthdays Service Awardees Reconciliation Tool]')
 @st.cache_data
 def get_active_ph_employees():
     conn = st.connection("gsheets", type=GSheetsConnection)
-    data = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1U7VHmsc3FHPzTHmK4mNTYZZrlLrW6aoTDErrAL6Z_MI/edit#gid=672401421", worksheet="Active Employees (PH) - RPT", usecols=list(range(38)))
+    data = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1U7VHmsc3FHPzTHmK4mNTYZZrlLrW6aoTDErrAL6Z_MI/edit#gid=672401421", worksheet="Active-Employees-(PH)-RPT", usecols=list(range(38)))
     active_ph_employees_df = pd.DataFrame(data)
     active_ph_employees_df.dropna(how='all', inplace=True)
     return active_ph_employees_df
@@ -21,7 +21,7 @@ active_ph_employees_df = get_active_ph_employees()
 @st.cache_data
 def get_active_vn_employees():
     conn = st.connection("gsheets", type=GSheetsConnection)
-    data = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1U7VHmsc3FHPzTHmK4mNTYZZrlLrW6aoTDErrAL6Z_MI/edit#gid=65589667", worksheet="Active Employees (VN) - RPT", usecols=list(range(38)))
+    data = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1U7VHmsc3FHPzTHmK4mNTYZZrlLrW6aoTDErrAL6Z_MI/edit#gid=65589667", worksheet="Active-Employees-(VN)-RPT", usecols=list(range(38)))
     active_vn_employees_df = pd.DataFrame(data)
     active_vn_employees_df.dropna(how='all', inplace=True)
     return active_vn_employees_df
@@ -31,7 +31,7 @@ active_vn_employees_df = get_active_vn_employees()
 @st.cache_data
 def get_active_ph_interns():
     conn = st.connection("gsheets", type=GSheetsConnection)
-    data = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1U7VHmsc3FHPzTHmK4mNTYZZrlLrW6aoTDErrAL6Z_MI/edit#gid=1719215400", worksheet="Active Interns (PH) - RPT", usecols=list(range(38)))
+    data = conn.read(spreadsheet="https://docs.google.com/spreadsheets/d/1U7VHmsc3FHPzTHmK4mNTYZZrlLrW6aoTDErrAL6Z_MI/edit#gid=1719215400", worksheet="Active-Interns-(PH)-RPT", usecols=list(range(38)))
     active_ph_interns_df = pd.DataFrame(data)
     active_ph_interns_df.dropna(how='all', inplace=True)
     return active_ph_interns_df
