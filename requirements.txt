@@ -6,3 +6,4 @@ textract
 nltk
 PyPDF2
 python-docx
+st-gsheets-connection==0.1.0
