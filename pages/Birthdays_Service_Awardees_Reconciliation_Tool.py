@@ -84,10 +84,10 @@ def process_interns(df, selected_month_num, current_year):
 
 intern_birthdays, intern_service = process_interns(active_ph_interns_df, selected_month_num, current_year)
 
-final_birthday_df = pd.concat([ph_birthdays, vn_birthdays, intern_birthdays], ignore_index=True).sort_values("Date")
-final_service_df = pd.concat([ph_service, vn_service, intern_service], ignore_index=True).sort_values("Date")
-final_birthday_df["Date"] = final_birthday_df["Date"].dt.strftime("%B %d, %Y")
-final_service_df["Date"] = final_service_df["Date"].dt.strftime("%B %d, %Y")
+final_birthday_df = pd.concat([ph_birthdays, vn_birthdays, intern_birthdays], ignore_index=True).sort_values("Birth Date")
+final_service_df = pd.concat([ph_service, vn_service, intern_service], ignore_index=True).sort_values("Start Date")
+final_birthday_df["Birth Date"] = final_birthday_df["Birth Date"].dt.strftime("%B %d, %Y")
+final_service_df["Start Date"] = final_service_df["Start Date"].dt.strftime("%B %d, %Y")
 
 st.subheader("🎉 Birthday Celebrants")
 st.dataframe(final_birthday_df, use_container_width=True, hide_index=True)
