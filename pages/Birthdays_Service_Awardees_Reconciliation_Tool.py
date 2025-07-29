@@ -56,11 +56,11 @@ def process_employees(df, location, selected_month_num, current_year):
     df["Employment Type"] = "Employee"
     df["Location"] = location
 
-    birthday_df = df[df["Birthday"].dt.month == selected_month_num][["Birthday", "Full Name", "Employment Type", "Location"]].rename(columns={"Birthday": "Date"})
+    birthday_df = df[df["Birthday"].dt.month == selected_month_num][["Birthday", "Full Name", "Employment Type", "Location"]].rename(columns={"Birthday": "Birth Date"})
     service_df = df[df["Start Date"].dt.month == selected_month_num].copy()
     service_df["Years of Service"] = current_year - service_df["Start Date"].dt.year
     service_df = service_df[service_df["Years of Service"] > 0][["Start Date", "Full Name", "Position", "Years of Service", "Employment Type", "Location"]]
-    service_df.rename(columns={"Start Date": "Date"}, inplace=True)
+    service_df.rename(columns={"Start Date": "Start Date"}, inplace=True)
 
     return birthday_df, service_df
 
@@ -74,11 +74,11 @@ def process_interns(df, selected_month_num, current_year):
     df["Employment Type"] = "Intern"
     df["Location"] = "PH"
 
-    birthday_df = df[df["Birthday"].dt.month == selected_month_num][["Birthday", "Full Name", "Employment Type", "Location"]].rename(columns={"Birthday": "Date"})
+    birthday_df = df[df["Birthday"].dt.month == selected_month_num][["Birthday", "Full Name", "Employment Type", "Location"]].rename(columns={"Birthday": "Birth Date"})
     service_df = df[df["Start Date"].dt.month == selected_month_num].copy()
     service_df["Years of Service"] = current_year - service_df["Start Date"].dt.year
     service_df = service_df[service_df["Years of Service"] > 0][["Start Date", "Full Name", "Position", "Years of Service", "Employment Type", "Location"]]
-    service_df.rename(columns={"Start Date": "Date"}, inplace=True)
+    service_df.rename(columns={"Start Date": "Start Date"}, inplace=True)
 
     return birthday_df, service_df
 
