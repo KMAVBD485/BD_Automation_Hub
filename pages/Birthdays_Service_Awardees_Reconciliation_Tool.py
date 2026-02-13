@@ -53,7 +53,7 @@ filtered_consultants_df = consultants_df[
     (consultants_df["ENGAGEMENT"] == "FEE")
 ]
 
-st.dataframe(filtered_consultants_df, use_container_width=True, hide_index=True)
+# st.dataframe(filtered_consultants_df, use_container_width=True, hide_index=True)
 
 months = list(calendar.month_name)[1:]
 selected_month = st.selectbox("Select a Month", months)
